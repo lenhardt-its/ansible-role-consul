@@ -1,0 +1,49 @@
+{
+{% if consul_config_base | length > 0 %}
+  {{ consul_config_base | to_nice_json }}
+{% endif %}
+{% if consul_config_acl | length > 0 %}
+  "acl": {
+    {{ consul_config_acl | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_addresses | length > 0 %}
+  "addresses": {
+    {{ consul_config_addresses | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_ports | length > 0 %}
+  "ports": {
+    {{ consul_config_ports | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_node_meta | length > 0 %}
+  "node_meta": {
+    {{ consul_config_node_meta | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_performance | length > 0 %}
+  "performance": {
+    {{ consul_config_performance | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_retry_join | length > 0 %}
+  "retry_join": {
+    {{ consul_config_retry_join | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_start_join | length > 0 %}
+  "start_join": {
+    {{ consul_config_start_join | to_nice_json }}
+  },
+{% endif %}
+{% if consul_config_encrypt | length > 0 %}
+  {{ consul_config_encrypt | to_nice_json }}
+{% endif %}
+{% if consul_config_tls | length > 0 %}
+  {{ consul_config_tls | to_nice_json }}
+{% endif %}
+{% if consul_config_telemetry | length > 0 %}
+  {{ consul_config_telemetry | to_nice_json }}
+{% endif %}
+}

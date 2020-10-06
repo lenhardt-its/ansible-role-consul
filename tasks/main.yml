@@ -1,0 +1,199 @@
+---
+- name: create system group
+  group:
+    name: "{{ consul_system_group }}"
+    system: true
+    state: present
+  when: consul_system_group != "root"
+  become: true
+  tags: consul
+
+- name: create system user
+  user:
+    name: "{{ consul_system_user }}"
+    system: true
+    shell: "/sbin/nologin"
+    group: "{{ consul_system_group }}"
+    createhome: false
+  when: consul_system_user != "root"
+  become: true
+  tags: consul
+
+- name: create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ consul_system_user }}"
+    group: "{{ consul_system_group }}"
+    mode: "0755"
+  with_items:
+    - "{{ consul_config_dir }}"
+    - "{{ consul_tls_dir }}"
+    - "{{ consul_data_dir }}"
+  become: true
+  tags: consul
+
+- name: check if service is installed
+  stat:
+    path: "{{ consul_binary_install_dir }}/consul"
+  register: __consul_is_installed
+  become: true
+  tags: consul
+
+- name: gather currently installed version
+  command: "{{ consul_binary_install_dir }}/consul version"
+  args:
+    warn: false
+  changed_when: false
+  register: __consul_current_version_output
+  when: __consul_is_installed.stat.exists
+  become: true
+  tags: consul
+
+- block:
+  - name: localhost - get checksum list from github
+    set_fact:
+      _checksums: "{{ lookup('url', 'https://releases.hashicorp.com/consul/' + consul_version + '/consul_' + consul_version + '_SHA256SUMS', wantlist=True) | list }}"
+    environment: "{{ proxy_env }}"
+    delegate_to: localhost
+    run_once: true
+    become: true
+    tags: consul
+
+  - name: localhost - get checksum for {{ go_arch }} architecture
+    set_fact:
+      consul_checksum: "{{ item.split(' ')[0] }}"
+    with_items: "{{ _checksums }}"
+    delegate_to: localhost
+    when: "('consul_' + consul_version + '_linux_' + go_arch + '.zip') in item"
+    become: true
+    tags: consul
+
+  - name: localhost - download binary to local folder
+    get_url:
+      url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_{{ go_arch }}.zip"
+      dest: "/tmp/consul-{{ consul_version }}.linux-{{ go_arch }}.zip"
+      checksum: "sha256:{{ consul_checksum }}"
+    environment: "{{ proxy_env }}"
+    register: _download_archive
+    until: _download_archive is succeeded
+    retries: 5
+    delay: 2
+    delegate_to: localhost
+    check_mode: false
+    become: true
+    tags: consul
+
+  - name: localhost - unpack binaries
+    unarchive:
+      src: "/tmp/consul-{{ consul_version }}.linux-{{ go_arch }}.zip"
+      dest: "/tmp"
+    delegate_to: localhost
+    check_mode: false
+    become: true
+    tags: consul
+
+  - name: propagate binaries
+    copy:
+      src: "/tmp/{{ item }}"
+      dest: "{{ consul_binary_install_dir }}/{{ item }}"
+      mode: "0755"
+      owner: "root"
+      group: "root"
+    with_items:
+      - consul
+    notify: restart consul
+    become: true
+    tags: consul
+  when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout_lines[0].split(" ")[1]|regex_search('[0-9.]+') != consul_version)
+
+- name: configure
+  template:
+    src: "consul.config.hcl.j2"
+    dest: "{{ consul_config_dir }}/{{ consul_config_file }}"
+    owner: "{{ consul_system_user }}"
+    group: "{{ consul_system_group }}"
+    mode: "0644"
+  notify: reload consul
+  become: true
+  tags: consul
+
+- name: configure services
+  template:
+    src: consul.service.json.j2
+    dest: "{{ consul_config_dir }}/{{ item.name }}_{{ item.address }}"
+    owner: "{{ consul_system_user }}"
+    group: "{{ consul_system_group }}"
+    mode: "0644"
+  with_items: "{{ consul_service_config }}"
+  notify: reload consul
+  become: true
+  tags: consul
+
+- name: create systemd service unit
+  template:
+    src: consul.service.j2
+    dest: /etc/systemd/system/consul.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart consul
+  become: true
+  tags: consul
+
+- name: allow binding to port in selinux
+  seport:
+    ports: "{{ consul_web_listen_port }}"
+    proto: tcp
+    setype: http_port_t
+    state: present
+  when:
+    - ansible_version.full is version_compare('2.4', '>=')
+    - ansible_selinux.status == "enabled"
+  become: true
+  tags: consul
+
+- name: allow access to port on firewalld
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    state: enabled
+  when: consul_firewalld_state == "enabled"
+  with_items:
+    - 8300/tcp
+    - 8301/tcp
+    - 8301/udp
+    - 8302/tcp
+    - 8302/udp
+  register: "_firewalld_consul_state"
+  become: true
+  tags: consul
+
+- name: allow web access to port on firewalld
+  firewalld:
+    port: "{{ consul_web_listen_port }}/tcp"
+    permanent: yes
+    state: enabled
+  when:
+    - consul_firewalld_state == "enabled"
+    - consul_config_base.server
+  register: "_firewalld_consul_state"
+  become: true
+  tags: consul
+
+- name: reload firewalld service
+  service:
+    name: firewalld
+    state: reloaded
+  when: _firewalld_consul_state['changed']
+  become: true
+  tags: consul
+
+- name: ensure service is started and enabled
+  systemd:
+    daemon_reload: true
+    name: consul
+    state: started
+    enabled: true
+  become: true
+  tags: consul

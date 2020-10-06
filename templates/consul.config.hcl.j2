@@ -1,0 +1,179 @@
+{{ ansible_managed | comment }}
+{% if consul_config_base | length > 0 %}
+# Basic configuration
+{%   for option, value in consul_config_base.items() %}
+{%     if value is sameas true %}
+{{ option }} = true
+{%     elif value is sameas false %}
+{{ option }} = false
+{%     elif value is string %}
+{{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+{{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+
+{% if consul_config_acl | length > 0 %}
+# Consul ACL configuration
+acl {
+{% for option, value in consul_config_acl.items() %}
+{%     if value is sameas true %}
+  {{ option }} = true
+{%     elif value is sameas false %}
+  {{ option }} = false
+{%     elif value is string %}
+  {{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+  {{ option }} = {{ value|int }}
+{%     elif value is mapping %}
+  {{ option }} {
+{%      for suboption, subvalue in value.items() %}
+{%        if subvalue is sameas true %}
+    {{ suboption }} = true
+{%        elif subvalue is sameas false %}
+    {{ suboption }} = false
+{%        elif subvalue is string %}
+    {{ suboption }} = "{{ subvalue|string }}"
+{%        elif subvalue is number %}
+    {{ suboption }} = {{ subvalue|int }}
+{%        endif %}
+{%      endfor %}
+  }
+{%     endif %}
+{%   endfor %}
+}
+{% endif %}
+
+{% if consul_config_addresses | length > 0 %}
+# Consul Addresses configuration
+addresses {
+{% for option, value in consul_config_addresses.items() %}
+{%     if value is sameas true %}
+  {{ option }} = true
+{%     elif value is sameas false %}
+  {{ option }} = false
+{%     elif value is string %}
+  {{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+  {{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+}
+{% endif %}
+
+{% if consul_config_ports | length > 0 %}
+# Consul Ports configuration
+ports {
+{% for option, value in consul_config_ports.items() %}
+{%     if value is sameas true %}
+  {{ option }} = true
+{%     elif value is sameas false %}
+  {{ option }} = false
+{%     elif value is string %}
+  {{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+  {{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+}
+{% endif %}
+
+{% if consul_config_node_meta | length > 0 %}
+# Consul Node Meta configuration
+node_meta {
+{% for option, value in consul_config_node_meta.items() %}
+{%     if value is sameas true %}
+  {{ option }} = true
+{%     elif value is sameas false %}
+  {{ option }} = false
+{%     elif value is string %}
+  {{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+  {{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+}
+{% endif %}
+
+{% if consul_config_performance | length > 0 %}
+# Consul Performance configuration
+performance {
+{% for option, value in consul_config_performance.items() %}
+{%     if value is sameas true %}
+  {{ option }} = true
+{%     elif value is sameas false %}
+  {{ option }} = false
+{%     elif value is string %}
+  {{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+  {{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+}
+{% endif %}
+
+{% if consul_config_retry_join | length > 0 %}
+# Consul Retry Join configuration
+retry_join = [
+{% for value in consul_config_retry_join %}
+  "{{ value }}",
+{%   endfor %}
+]
+{% endif %}
+
+{% if consul_config_start_join | length > 0 %}
+# Consul Start Join configuration
+start_join = [
+{% for value in consul_config_start_join %}
+  "{{ value }}",
+{%   endfor %}
+]
+{% endif %}
+
+{% if consul_config_encrypt | length > 0 %}
+# Consul Encrypt configuration
+{% for option, value in consul_config_encrypt.items() %}
+{%     if value is sameas true %}
+{{ option }} = true
+{%     elif value is sameas false %}
+{{ option }} = false
+{%     elif value is string %}
+{{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+{{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+
+{% if consul_config_tls | length > 0 %}
+# Consul TLS configuration
+{% for option, value in consul_config_tls.items() %}
+{%     if value is sameas true %}
+{{ option }} = true
+{%     elif value is sameas false %}
+{{ option }} = false
+{%     elif value is string %}
+{{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+{{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+
+{% if consul_config_telemetry | length > 0 %}
+# Consul Telemetry configuration
+telemetry {
+{% for option, value in consul_config_telemetry.items() %}
+{%     if value is sameas true %}
+  {{ option }} = true
+{%     elif value is sameas false %}
+  {{ option }} = false
+{%     elif value is string %}
+  {{ option }} = "{{ value|string }}"
+{%     elif value is number %}
+  {{ option }} = {{ value|int }}
+{%     endif %}
+{%   endfor %}
+{% endif %}
+}

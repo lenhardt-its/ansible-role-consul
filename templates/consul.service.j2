@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+[Unit]
+Description=Consul
+Documentation=https://github.com/hashicorp/consul
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=simple
+User={{ consul_system_user }}
+Group={{ consul_system_group }}
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart={{ consul_binary_install_dir }}/consul agent \
+  -config-file={{ consul_config_dir }}/{{ consul_config_file }} \
+  -config-dir={{ consul_config_dir }}
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

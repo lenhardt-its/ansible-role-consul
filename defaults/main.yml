@@ -1,13 +1,12 @@
 ---
 proxy_env: {}
-consul_version: 1.8.3
+consul_version: 1.9.4
 consul_config_dir: "/etc/consul"
 consul_data_dir: "/var/lib/consul"
 consul_tls_dir: "{{ consul_config_dir }}/tls"
 consul_config_file: config.hcl
-consul_firewalld_state: "disabled"
+consul_allow_firewall: "disabled"
 consul_binary_install_dir: "/usr/local/bin"
-# Run consul-template as prometheus user to write output to prometheus file_sd folder
 consul_system_user: "{{ consul_user | default('consul') }}"
 consul_system_group: "{{ consul_group | default('consul') }}"
 consul_web_listen_port: 8500

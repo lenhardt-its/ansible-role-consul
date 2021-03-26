@@ -13,8 +13,10 @@ ExecReload=/bin/kill -HUP $MAINPID
 ExecStart={{ consul_binary_install_dir }}/consul agent \
   -config-file={{ consul_config_dir }}/{{ consul_config_file }} \
   -config-dir={{ consul_config_dir }}
+
+SyslogIdentifier=consul
 Restart=on-failure
-RestartSec=30
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

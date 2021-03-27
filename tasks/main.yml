@@ -188,6 +188,15 @@
     - ansible_os_family == 'Debian'
   tags: consul
 
+- name: check whether firewalld status is active
+  command: "firewall-cmd --state"
+  changed_when: False
+  ignore_errors: True
+  register: _firewalld_status
+  become: true
+  when: ansible_os_family == 'RedHat'
+  tags: consul
+
 - name: configure ufw
   community.general.ufw:
     rule: allow
@@ -209,6 +218,7 @@
     permanent: yes
     state: true
   when:
+    - "'running' in _firewalld_status.stdout"
     - consul_allow_firewall
     - ansible_os_family == 'RedHat'
   notify: reload firewalld

@@ -30,6 +30,7 @@
     - "{{ consul_config_dir }}"
     - "{{ consul_tls_dir }}"
     - "{{ consul_data_dir }}"
+    - "{{ consul_log_dir }}"
   become: true
   tags: consul
 

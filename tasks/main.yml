@@ -108,7 +108,7 @@
     tags: consul
   when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout_lines[0].split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
-- name: configure service
+- name: configure
   template:
     src: "consul.config.json.j2"
     dest: "{{ consul_config_dir }}/{{ consul_config_file }}"
@@ -117,7 +117,9 @@
     mode: "0644"
   notify: reload consul
   become: true
-  tags: consul
+  tags:
+    - consul
+    - consul_config
 
 - name: create systemd service unit
   template:

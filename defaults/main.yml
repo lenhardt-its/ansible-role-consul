@@ -44,7 +44,9 @@ consul_config: {}
 #  retry_max_wan: 0
 #  server: true
 #  translate_wan_addrs: false
-#  ui: true
+#  ui_config:
+#    enabled: true
+#    metrics_provider: prometheus 
 #  bootstrap: false
 #  bootstrap_expect: 1
 #  data_dir: "/var/lib/consul"
@@ -125,7 +127,7 @@ consul_config: {}
 #      __metrics_path__: "/v1/agent/metrics?format=prometheus"
 #      __scheme__: "http"
 #    checks:
-#      args: ["curl","-s","-L","-o","/dev/null","-w","%{http_code}","-LI","{{ ansible_hostname }}.{{ ansible_domain }}:{{ consul_web_listen_port }}"]
+#      args: ["curl", "-s", "-L", "-o", "/dev/null", "-w", "%{http_code}", "-LI", "{{ ansible_hostname }}.{{ ansible_domain }}:{{ consul_web_listen_port }}"]
 #      interval: "60s"
 #      timeout": "10s"
 #    tags: ["prometheus","metrics"]
@@ -137,7 +139,7 @@ consul_config: {}
 #      __metrics_path__: "/metrics"
 #      __scheme__: "http"
 #    checks:
-#      args: ["curl","-s","-L","-o","/dev/null","-w","%{http_code}","-LI","{{ ansible_hostname }}.{{ ansible_domain }}:9100"]
+#      args: ["curl", "-s", "-L", "-o", "/dev/null", "-w", "%{http_code}", "-LI", "{{ ansible_hostname }}.{{ ansible_domain }}:9100"]
 #      interval: "60s"
 #      timeout": "10s"
-#    tags: ["prometheus","metrics"]
+#    tags: ["prometheus", "metrics"]

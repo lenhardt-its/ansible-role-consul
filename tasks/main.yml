@@ -106,7 +106,7 @@
     notify: restart consul
     become: true
     tags: consul
-  when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout_lines[0].split(" ")[1]|regex_search('[0-9.]+') != consul_version)
+  when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout.split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
 - name: configure
   template:

@@ -5,129 +5,139 @@ consul_config_dir: "/etc/consul"
 consul_data_dir: "/var/lib/consul"
 consul_log_dir: "/var/log/consul"
 consul_tls_dir: "{{ consul_config_dir }}/tls"
-consul_config_file: config.hcl
+consul_config_file: config.json
 consul_allow_firewall: "disabled"
 consul_binary_install_dir: "/usr/local/bin"
 consul_system_user: "{{ consul_user | default('consul') }}"
 consul_system_group: "{{ consul_group | default('consul') }}"
 consul_web_listen_port: 8500
-
-# Configure single Consul service
-consul_service_config: {}
-#  - id: "node.infra.onkeldom.lan"
+consul_ports:
+  - port: "{{ consul_web_listen_port }}"
+    proto: tcp
+  - port: 8300
+    proto: tcp
+  - port: 8301
+    proto: tcp
+  - port: 8301
+    proto: udp
+  - port: 8302
+    proto: tcp
+  - port: 8302
+    proto: udp
+  - port: 8600
+    proto: tcp
+  - port: 8600
+    proto: udp
+# Consul configuration
+consul_config: {}
+#  primary_datacenter: "{{ ansible_domain }}"
+#  alt_domain: "consul.{{ ansible_domain }}"
+#  datacenter: "{{ ansible_domain }}"
+#  advertise_addr_ipv6: "{{ ansible_default_ipv6.address }}"
+#  advertise_addr_ipv4: "{{ ansible_default_ipv4.address }}"
+#  bind_addr: "0.0.0.0"
+#  client_addr: "{{ ansible_default_ipv4.address }}"
+#  raft_protocol: 3
+#  retry_interval: "300s"
+#  retry_interval_wan: "300s"
+#  retry_max: 0
+#  retry_max_wan: 0
+#  server: true
+#  translate_wan_addrs: false
+#  ui: true
+#  bootstrap: false
+#  bootstrap_expect: 1
+#  data_dir: "/var/lib/consul"
+#  disable_update_check: true
+#  domain: "consul"
+#  enable_local_script_checks: true
+#  enable_script_checks: true
+#  encrypt: "XXXXXXXXX"
+#  log_level: "WARN"
+#  log_json: true
+#  acl:
+#    default_policy: "allow"
+#    down_policy: "extend-cache"
+#    enable_token_persistence: true
+#    tokens:
+#      agent: "XXXXXXXX"
+#      master: ""
+#      replication: ""
+#  addresses
+#    dns: "0.0.0.0"
+#    grpc: "0.0.0.0"
+#    http: "0.0.0.0"
+#    https: "0.0.0.0"
+#  telemetry:
+#    prometheus_retention_time: "90h"
+#    disable_hostname: true
+#  ports:
+#    dns: -1
+#    grpc: -1
+#    http: "{{ consul_web_listen_port }}"
+#    https: -1
+#    serf_lan: 8301
+#    serf_wan: -1
+#  performance:
+#    leave_drain_time: "5s"
+#    raft_multiplier: 1
+#    rpc_hold_timeout: "7s"
+#  retry_join:
+#    - 192.168.1.10
+#    - 192.168.1.11
+#    - 192.168.1.12
+#  start_join:
+#    - 192.168.1.10
+#    - 192.168.1.11
+#    - 192.168.1.12
+#  encrypt:
+#    encrypt: "<crate with consul encrypt>"
+#    encrypt_verify_incoming: true
+#    encrypt_verify_outgoing: true
+#  tls:
+#    ca_file: "{{ consul_tls_dir }}/ca-cert.pem"
+#    cert_file: "{{ consul_tls_dir }}/cert.pem"
+#    key_file: "{{ consul_tls_dir }}/key.pem"
+#    verify_incoming: true
+#    verify_outgoing: true
+#    verify_incoming_rpc: true
+#    verify_incoming_https: true
+#    verify_server_hostname: true
+#    tls_min_version: "tls12"
+#    auto_encrypt:
+#      allow_tls: true
+#  node_name: "{{ ansible_hostname }}.{{ ansible_domain }}"
+#  node_meta:
+#    architecture: "{{ ansible_architecture }}"
+#    distribution: "{{ ansible_distribution | lower }}"
+#    distribution_version: "{{ ansible_distribution_version }}"
+#    virt: "{{ ansible_virtualization_type }}"
+#    hostname: "{{ ansible_hostname }}.{{ ansible_domain }}"
+#    environment: "prod"
+#    product: "infra"
+#    severity: "critical"
+# services:
+#  - id: "{{ ansible_machine_id }}_{{ ansible_hostname }}.{{ ansible_domain }}"
+#    name: "monitoring-consul_exporter"
+#    port: "{{ consul_web_listen_port }}"
+#    address: "{{ ansible_hostname }}.{{ ansible_domain }}"
+#    meta:
+#      __metrics_path__: "/v1/agent/metrics?format=prometheus"
+#      __scheme__: "http"
+#    checks:
+#      args: ["curl","-s","-L","-o","/dev/null","-w","%{http_code}","-LI","{{ ansible_hostname }}.{{ ansible_domain }}:{{ consul_web_listen_port }}"]
+#      interval: "60s"
+#      timeout": "10s"
+#    tags: ["prometheus","metrics"]
+#  - id: "{{ ansible_machine_id }}_{{ ansible_hostname }}.{{ ansible_domain }}"
 #    name: "monitoring-node_exporter"
 #    port: 9100
-#    address: "node.infra.onkeldom.lan"
+#    address: "{{ ansible_hostname }}.{{ ansible_domain }}"
 #    meta:
 #      __metrics_path__: "/metrics"
 #      __scheme__: "http"
 #    checks:
-#      args: ["curl","-s","-L","-o","/dev/null","-w","%{http_code}","-LI","localhost:9100"]
-#      interval: "30s"
+#      args: ["curl","-s","-L","-o","/dev/null","-w","%{http_code}","-LI","{{ ansible_hostname }}.{{ ansible_domain }}:9100"]
+#      interval: "60s"
 #      timeout": "10s"
 #    tags: ["prometheus","metrics"]
-
-# Configure Consul Config - ACL
-consul_config_acl: {}
-#  default_policy: "allow"
-#  down_policy: "extend-cache"
-#  enable_token_persistence: true
-#  tokens:
-#    agent: "6a983379-a67c-5b38-9d00-e0e8addb8212"
-#    master: ""
-#    replication: ""
-
-# Configure Consul Config - Addresses
-consul_config_addresses: {}
-#  dns: "0.0.0.0"
-#  grpc: "0.0.0.0"
-#  http: "0.0.0.0"
-#  https: "0.0.0.0"
-
-# Configure Consul Config - Ports
-consul_config_ports: {}
-#  dns: -1
-#  grpc: -1
-#  http: 8500
-#  https: -1
-#  serf_lan: 8301
-#  serf_wan: -1
-
-# Configure Consul Config - Node Meta
-consul_config_node_meta: {}
-#  arch: "x86_64"
-#  environment: "prod"
-#  os: "CentOS"
-#  product: "infra"
-#  severity: "critical"
-#  type: "kvm"
-
-# Configure Consul Config - Performance
-consul_config_performance: {}
-#  leave_drain_time: "5s"
-#  raft_multiplier: 1
-#  rpc_hold_timeout: "7s"
-
-# Configure Consul Config - Retry Join
-consul_config_retry_join: {}
-#  - 192.168.1.10
-#  - 192.168.1.11
-#  - 192.168.1.12
-
-# Configure Consul Config - Start Join
-consul_config_start_join: {}
-#  - 192.168.1.10
-#  - 192.168.1.11
-#  - 192.168.1.12
-
-# Configure Consul Config - Encrypt
-consul_config_encrypt: {}
-#  encrypt: "<crate with consul encrypt>"
-#  encrypt_verify_incoming: true
-#  encrypt_verify_outgoing: true
-
-# Configure Consul Config - TLS
-consul_config_tls: {}
-#  ca_file: "{{ consul_tls_dir }}/ca-cert.pem"
-#  cert_file: "{{ consul_tls_dir }}/cert.pem"
-#  key_file: "{{ consul_tls_dir }}/key.pem"
-#  verify_incoming: true
-#  verify_outgoing: true
-#  verify_incoming_rpc: true
-#  verify_incoming_https: true
-#  verify_server_hostname: true
-#  tls_min_version: "tls12"
-#  auto_encrypt:
-#    allow_tls: true
-
-# Configure Consul Config - Base
-consul_config_base: {}
-#  advertise_addr: "{{ ansible_default_ipv4.address }}"
-#  alt_domain: "consul.mgmt.onkeldom.lan"
-#  bind_addr: "{{ ansible_default_ipv4.address }}"
-#  client_addr: "{{ ansible_default_ipv4.address }}"
-#  data_dir: "/var/lib/consul"
-#  datacenter: "dc1"
-#  disable_update_check: true
-#  domain: "consul"
-#  enable_local_script_checks: true
-#  enable_script_checks: false
-#  log_json: true
-#  log_file: "/var/log/consul/consul.log"
-#  log_level: "INFO"
-#  log_rotate_bytes: 0
-#  log_rotate_duration: "24h"
-#  log_rotate_max_files: 0
-#  node_name: "{{ ansible_hostname }}.{{ ansible_domain }}"
-#  primary_datacenter: "dc1"
-#  raft_protocol: 3
-#  retry_interval: "30s"
-#  retry_interval_wan: "30s"
-#  retry_max: 0
-#  retry_max_wan: 0
-#  server: false
-
-# Configure Consul Config - Telemetry
-consul_config_telemetry: {}
-#  prometheus_retention_time: "90h"
-#  disable_hostname: true

@@ -108,25 +108,13 @@
     tags: consul
   when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout_lines[0].split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
-- name: configure
+- name: configure service
   template:
-    src: "consul.config.hcl.j2"
+    src: "consul.config.json.j2"
     dest: "{{ consul_config_dir }}/{{ consul_config_file }}"
     owner: "{{ consul_system_user }}"
     group: "{{ consul_system_group }}"
     mode: "0644"
-  notify: reload consul
-  become: true
-  tags: consul
-
-- name: configure services
-  template:
-    src: consul.service.json.j2
-    dest: "{{ consul_config_dir }}/{{ item.name }}_{{ item.address }}"
-    owner: "{{ consul_system_user }}"
-    group: "{{ consul_system_group }}"
-    mode: "0644"
-  with_items: "{{ consul_service_config }}"
   notify: reload consul
   become: true
   tags: consul
@@ -201,13 +189,14 @@
 - name: configure ufw
   community.general.ufw:
     rule: allow
-    port: "{{ consul_web_listen_port }}"
-    proto: tcp
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
     state: enabled
     comment: "Consul"
   changed_when: False
   ignore_errors: True
   notify: reload ufw
+  with_items: "{{ consul_ports }}"
   become: true
   tags: consul
   when:
@@ -217,9 +206,10 @@
 
 - name: configure firewalld
   firewalld:
-    port: "{{ consul_web_listen_port }}/tcp"
+    port: "{{ item.port }}/{{ item.proto }}"
     permanent: yes
     state: true
+  with_items: "{{ consul_ports }}"
   changed_when: False
   ignore_errors: True
   when:

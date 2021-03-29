@@ -30,9 +30,9 @@ consul_ports:
     proto: udp
 # Consul configuration
 consul_config: {}
-#  primary_datacenter: "{{ ansible_domain }}"
 #  alt_domain: "consul.{{ ansible_domain }}"
-#  datacenter: "{{ ansible_domain }}"
+#  datacenter: "dc1"
+#  primary_datacenter: "dc1"
 #  advertise_addr_ipv6: "{{ ansible_default_ipv6.address }}"
 #  advertise_addr_ipv4: "{{ ansible_default_ipv4.address }}"
 #  bind_addr: "0.0.0.0"
@@ -127,7 +127,7 @@ consul_config: {}
 #      __metrics_path__: "/v1/agent/metrics?format=prometheus"
 #      __scheme__: "http"
 #    checks:
-#      args: ["curl", "-s", "-L", "-o", "/dev/null", "-w", "%{http_code}", "-LI", "{{ ansible_hostname }}.{{ ansible_domain }}:{{ consul_web_listen_port }}"]
+#    - args: ["curl", "-s", "-L", "-o", "/dev/null", "-w", "%{http_code}", "-LI", "{{ ansible_hostname }}.{{ ansible_domain }}:{{ consul_web_listen_port }}"]
 #      interval: "60s"
 #      timeout": "10s"
 #    tags: ["prometheus","metrics"]
@@ -139,7 +139,7 @@ consul_config: {}
 #      __metrics_path__: "/metrics"
 #      __scheme__: "http"
 #    checks:
-#      args: ["curl", "-s", "-L", "-o", "/dev/null", "-w", "%{http_code}", "-LI", "{{ ansible_hostname }}.{{ ansible_domain }}:9100"]
+#    - args: ["curl", "-s", "-L", "-o", "/dev/null", "-w", "%{http_code}", "-LI", "{{ ansible_hostname }}.{{ ansible_domain }}:9100"]
 #      interval: "60s"
 #      timeout": "10s"
 #    tags: ["prometheus", "metrics"]

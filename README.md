@@ -39,15 +39,8 @@ All variables which can be overridden are stored in [defaults/main.yml](defaults
 | `consul_system_user` | consul | User for Consul Template |
 | `consul_system_group` | consul | Group for Consul Template |
 | `consul_web_listen_port` | 8888 | Prometheus metrics listen Port |
-| `consul_config_consul` | {} | Configure consul entpoint |
-| `consul_config_vault` | {} | Configure vault entpoint |
-| `consul_config_default` | {} | Configure default options |
-| `consul_config_wait` | {} | Configure wait options |
-| `consul_config_deduplicate` | {} | Configure deduplication options |
-| `consul_config_telemetry` | {} | Configure telemetry options |
-| `consul_config_exec` | {} | Configure exec options |
-| `consul_config_syslog` | {} | Configure syslog options |
-| `consul_templates_config` | {} | Configure prometheus file_sd templates |
+| `consul_ports` | [defaults/main.yml#L14](defaults/main.yml#L14) | see ports in defaults file |
+| `consul_config` | [defaults/main.yml#L32](defaults/main.yml#L32) | see config exmaple in defaults file |
 
 ## Example
 

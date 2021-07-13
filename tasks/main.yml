@@ -51,61 +51,65 @@
   become: true
   tags: consul
 
-- block:
-  - name: localhost - get checksum list from github
-    set_fact:
-      _checksums: "{{ lookup('url', 'https://releases.hashicorp.com/consul/' + consul_version + '/consul_' + consul_version + '_SHA256SUMS', wantlist=True) | list }}"
-    environment: "{{ proxy_env }}"
-    delegate_to: localhost
-    run_once: true
-    become: true
-    tags: consul
+- name: localhost - get checksum list from github
+  set_fact:
+    _checksums: "{{ lookup('url', 'https://releases.hashicorp.com/consul/' + consul_version + '/consul_' + consul_version + '_SHA256SUMS', wantlist=True) | list }}"
+  environment: "{{ proxy_env }}"
+  delegate_to: localhost
+  run_once: true
+  become: true
+  tags: consul
+  when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout.split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
-  - name: localhost - get checksum for {{ go_arch }} architecture
-    set_fact:
-      consul_checksum: "{{ item.split(' ')[0] }}"
-    with_items: "{{ _checksums }}"
-    delegate_to: localhost
-    when: "('consul_' + consul_version + '_linux_' + go_arch + '.zip') in item"
-    become: true
-    tags: consul
+- name: localhost - get checksum for {{ go_arch }} architecture
+  set_fact:
+    consul_checksum: "{{ item.split(' ')[0] }}"
+  with_items: "{{ _checksums }}"
+  delegate_to: localhost
+  when:
+    - "('consul_' + consul_version + '_linux_' + go_arch + '.zip') in item"
+    - (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout.split(" ")[1]|regex_search('[0-9.]+') != consul_version)
+  become: true
+  tags: consul
 
-  - name: localhost - download binary to local folder
-    get_url:
-      url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_{{ go_arch }}.zip"
-      dest: "/tmp/consul-{{ consul_version }}.linux-{{ go_arch }}.zip"
-      checksum: "sha256:{{ consul_checksum }}"
-    environment: "{{ proxy_env }}"
-    register: _download_archive
-    until: _download_archive is succeeded
-    retries: 5
-    delay: 2
-    delegate_to: localhost
-    check_mode: false
-    become: true
-    tags: consul
+- name: localhost - download binary to local folder
+  get_url:
+    url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_{{ go_arch }}.zip"
+    dest: "/tmp/consul-{{ consul_version }}.linux-{{ go_arch }}.zip"
+    checksum: "sha256:{{ consul_checksum }}"
+  environment: "{{ proxy_env }}"
+  register: _download_archive
+  until: _download_archive is succeeded
+  retries: 5
+  delay: 2
+  delegate_to: localhost
+  check_mode: false
+  become: true
+  tags: consul
+  when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout.split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
-  - name: localhost - unpack binaries
-    unarchive:
-      src: "/tmp/consul-{{ consul_version }}.linux-{{ go_arch }}.zip"
-      dest: "/tmp"
-    delegate_to: localhost
-    check_mode: false
-    become: true
-    tags: consul
+- name: localhost - unpack binaries
+  unarchive:
+    src: "/tmp/consul-{{ consul_version }}.linux-{{ go_arch }}.zip"
+    dest: "/tmp"
+  delegate_to: localhost
+  check_mode: false
+  become: true
+  tags: consul
+  when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout.split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
-  - name: propagate binaries
-    copy:
-      src: "/tmp/{{ item }}"
-      dest: "{{ consul_binary_install_dir }}/{{ item }}"
-      mode: "0755"
-      owner: "root"
-      group: "root"
-    with_items:
-      - consul
-    notify: restart consul
-    become: true
-    tags: consul
+- name: propagate binaries
+  copy:
+    src: "/tmp/{{ item }}"
+    dest: "{{ consul_binary_install_dir }}/{{ item }}"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+  with_items:
+    - consul
+  notify: restart consul
+  become: true
+  tags: consul
   when: (not __consul_is_installed.stat.exists) or (__consul_current_version_output.stdout.split(" ")[1]|regex_search('[0-9.]+') != consul_version)
 
 - name: configure
@@ -129,96 +133,6 @@
     group: root
     mode: "0644"
   notify: restart consul
-  become: true
-  tags: consul
-
-- name: enable capabilities to ports lower than port 1024
-  capabilities:
-    path: "{{ consul_binary_install_dir }}/consul"
-    capability: CAP_NET_BIND_SERVICE+ep
-    state: present
-  when: consul_web_listen_port <= 1024
-  tags: consul
-
-- name: install selinux dependencies
-  package:
-    name: "{{ item }}"
-    state: present
-  environment: "{{ proxy_env }}"
-  with_items: "{{ consul_selinux_packages }}"
-  register: _install_packages
-  until: _install_packages is succeeded
-  retries: 5
-  delay: 2
-  when:
-    - ansible_version.full is version_compare('2.4', '>=')
-    - ansible_selinux.status == "enabled"
-  become: true
-  tags: consul
-
-- name: allow binding to port in selinux
-  seport:
-    ports: "{{ consul_web_listen_port }}"
-    proto: tcp
-    setype: http_port_t
-    state: present
-  when:
-    - ansible_version.full is version_compare('2.4', '>=')
-    - ansible_selinux.status == "enabled"
-  become: true
-  tags: consul
-
-- name: check whether ufw status is active
-  command: "ufw status"
-  changed_when: False
-  ignore_errors: True
-  register: _ufw_status
-  become: true
-  when:
-    - consul_allow_firewall
-    - ansible_os_family == 'Debian'
-  tags: consul
-
-- name: check whether firewalld status is active
-  command: "firewall-cmd --state"
-  changed_when: False
-  ignore_errors: True
-  register: _firewalld_status
-  become: true
-  when: ansible_os_family == 'RedHat'
-  tags: consul
-
-- name: configure ufw
-  community.general.ufw:
-    rule: allow
-    port: "{{ item.port }}"
-    proto: "{{ item.proto }}"
-    state: enabled
-    comment: "Consul"
-  changed_when: False
-  ignore_errors: True
-  notify: reload ufw
-  with_items: "{{ consul_ports }}"
-  become: true
-  tags: consul
-  when:
-    - "'active' in _ufw_status.stdout"
-    - ansible_os_family == 'Debian'
-    - consul_allow_firewall
-
-- name: configure firewalld
-  firewalld:
-    port: "{{ item.port }}/{{ item.proto }}"
-    permanent: yes
-    state: true
-  with_items: "{{ consul_ports }}"
-  changed_when: False
-  ignore_errors: True
-  when:
-    - "'running' in _firewalld_status.stdout"
-    - consul_allow_firewall
-    - ansible_os_family == 'RedHat'
-  notify: reload firewalld
   become: true
   tags: consul
 

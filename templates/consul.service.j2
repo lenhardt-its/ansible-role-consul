@@ -17,6 +17,8 @@ ExecStart={{ consul_binary_install_dir }}/consul agent \
 SyslogIdentifier=consul
 Restart=on-failure
 RestartSec=5
+LimitNOFILE={{ consul_limit_nofile | default('8192') }}
+LimitMEMLOCK=infinity
 
 [Install]
 WantedBy=multi-user.target

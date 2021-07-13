@@ -21,7 +21,6 @@ This is designed to handle services für prometheus service discoery or for cons
 ## Requirements
 
 - Ansible >= 2.9 (It might work on previous versions, but we cannot guarantee it)
-- Community Packages: `ansible-galaxy collection install community.general`
 
 ## Role Variables
 
@@ -30,16 +29,17 @@ All variables which can be overridden are stored in [defaults/main.yml](defaults
 | Name           | Default Value | Description                        |
 | -------------- | ------------- | -----------------------------------|
 | `proxy_env` |  {} | Set proxy environment variables |
-| `consul_version` | 0.25.1 | Consul Template download Version |
+| `consul_version` | 1.10.0 | Consul download Version |
 | `consul_config_dir` | /etc/consul | Config Path |
-| `consul_template_dir` | "{{ consul_config_dir }}/templates" | Template store path |
-| `consul_config_file` | config.hcl | Config file name |
-| `consul_allow_firewall` | false | Allow access on firewalld port |
+| `consul_data_dir` | /var/lib/consul | Data store path |
+| `consul_config_file` | config.json | Config file name |
+| `consul_log_dir` | /var/log/consul | logfile dir |
+| `consul_tls_dir` | "{{ consul_config_dir }}/tls" | tls dir |
+| `consul_limit_nofile` | 8192 | set systemd nofile limit |
 | `consul_binary_install_dir` | "/usr/local/bin" | Base binary path |
 | `consul_system_user` | consul | User for Consul Template |
 | `consul_system_group` | consul | Group for Consul Template |
-| `consul_web_listen_port` | 8888 | Prometheus metrics listen Port |
-| `consul_ports` | [defaults/main.yml#L14](defaults/main.yml#L14) | see ports in defaults file |
+| `consul_web_listen_port` | 8500 | Prometheus metrics listen Port |
 | `consul_config` | [defaults/main.yml#L32](defaults/main.yml#L32) | see config exmaple in defaults file |
 
 ## Example

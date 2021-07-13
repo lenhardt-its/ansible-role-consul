@@ -1,33 +1,16 @@
 ---
 proxy_env: {}
-consul_version: 1.9.4
+consul_version: 1.10.0
 consul_config_dir: "/etc/consul"
 consul_data_dir: "/var/lib/consul"
 consul_log_dir: "/var/log/consul"
 consul_tls_dir: "{{ consul_config_dir }}/tls"
 consul_config_file: config.json
-consul_allow_firewall: "disabled"
 consul_binary_install_dir: "/usr/local/bin"
 consul_system_user: "{{ consul_user | default('consul') }}"
 consul_system_group: "{{ consul_group | default('consul') }}"
+consul_limit_nofile: 8192
 consul_web_listen_port: 8500
-consul_ports:
-  - port: "{{ consul_web_listen_port }}"
-    proto: tcp
-  - port: 8300
-    proto: tcp
-  - port: 8301
-    proto: tcp
-  - port: 8301
-    proto: udp
-  - port: 8302
-    proto: tcp
-  - port: 8302
-    proto: udp
-  - port: 8600
-    proto: tcp
-  - port: 8600
-    proto: udp
 # Consul configuration
 consul_config: {}
 #  alt_domain: "consul.{{ ansible_domain }}"
